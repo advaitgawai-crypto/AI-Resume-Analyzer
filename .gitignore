@@ -1,0 +1,20 @@
+﻿# Data - too large for GitHub
+data/raw/
+data/processed/*.csv
+data/processed/*.xlsx
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Jupyter
+.ipynb_checkpoints/
