@@ -18,3 +18,5 @@ venv/
 
 # Jupyter
 .ipynb_checkpoints/
+models/
+desktop.ini
