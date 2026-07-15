@@ -1,0 +1,43 @@
+================================================================================
+PHASE 4 VECTORIZATION & SIMILARITY SCORING - METADATA
+================================================================================
+
+INPUT:
+  File: resumes_with_entities.csv
+  Resumes: 2716
+  Entity types: SKILL, JOB_TITLE, DEGREE, INSTITUTION, CERTIFICATION
+
+TF-IDF VECTORIZATION:
+  max_features: 5000
+  min_df: 2
+  max_df: 0.95
+  Vocabulary sizes:
+    SKILL: 57
+    JOB_TITLE: 31
+    DEGREE: 36
+    INSTITUTION: 311
+    CERTIFICATION: 141
+
+SIMILARITY AGGREGATION WEIGHTS:
+  SKILL: 0.4
+  JOB_TITLE: 0.25
+  DEGREE: 0.2
+  INSTITUTION: 0.1
+  CERTIFICATION: 0.05
+
+OUTPUTS:
+  similarity_matrix.npz: 16.57 MB (sparse 2484x2484 matrix)
+  category_scores.csv: 226.3 KB (2484 rows x 7 columns)
+  vectorization_metadata.txt: This file
+
+USAGE:
+  Load sparse matrix in Python:
+    from scipy.sparse import load_npz
+    sim = load_npz('similarity_matrix.npz')
+    score = sim[resume_i, resume_j]  # Query any pair
+
+NOTES:
+  - EXPERIENCE_DURATION excluded (0% extraction rate from Phase 2)
+  - Similarity matrix is sparse (95% zeros, only ~200k non-zero values stored)
+  - Overall score is weighted average of category scores
+  - Ready for Phase 5 (matching engine & job fit scoring)
