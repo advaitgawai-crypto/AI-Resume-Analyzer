@@ -1,0 +1,72 @@
+================================================================================
+CAREER MATCH ANALYSIS & SKILL DEVELOPMENT PLAN
+================================================================================
+
+Job Posting: senior_python_engineer.pdf
+Analysis Date: 20260720_093411
+
+JOB REQUIREMENTS ANALYSIS
+--------------------------------------------------------------------------------
+Required Experience: 7 years
+
+Core Skills Required (1 total):
+  • Python
+
+Desired Job Titles:
+  • Developer
+
+================================================================================
+TOP 10 MATCHED CANDIDATES
+================================================================================
+
+These candidates are the closest matches for this role:
+
+  1. Resume 55953734
+     Overall Match: 54.5%
+     Skill Match: 100.0%
+
+  2. Resume 27152464
+     Overall Match: 42.8%
+     Skill Match: 55.1%
+
+  3. Resume 36434348
+     Overall Match: 40.9%
+     Skill Match: 0.0%
+
+  4. Resume 33872500
+     Overall Match: 40.9%
+     Skill Match: 0.0%
+
+  5. Resume 20566550
+     Overall Match: 38.8%
+     Skill Match: 62.2%
+
+  6. Resume 62994611
+     Overall Match: 38.5%
+     Skill Match: 67.4%
+
+  7. Resume 34953092
+     Overall Match: 35.3%
+     Skill Match: 47.1%
+
+  8. Resume 13405733
+     Overall Match: 34.8%
+     Skill Match: 45.6%
+
+  9. Resume 12011623
+     Overall Match: 33.5%
+     Skill Match: 42.1%
+
+  10. Resume 32985311
+     Overall Match: 28.6%
+     Skill Match: 78.7%
+
+================================================================================
+YOUR PERSONALIZED SKILL DEVELOPMENT PLAN
+================================================================================
+
+
+1. REQUIRED SKILLS FOR THIS ROLE
+--------------------------------------------------------------------------------
+  Python
+

@@ -1,0 +1,36 @@
+================================================================================
+PHASE 5: MATCHING ENGINE SUMMARY
+================================================================================
+
+Job Posting: test_job_posting.pdf
+Timestamp: 20260720_091559
+
+EXTRACTED JOB REQUIREMENTS:
+  SKILL: Python, SQL
+  JOB_TITLE: None
+  DEGREE: None
+  INSTITUTION: None
+  CERTIFICATION: None
+  EXPERIENCE_DURATION: 7 years
+
+TOP MATCHED RESUMES (Overall):
+  Rank 1: Resume 11813872 (score: 0.364)
+  Rank 2: Resume 32985311 (score: 0.364)
+  Rank 3: Resume 10265057 (score: 0.290)
+  Rank 4: Resume 20566550 (score: 0.287)
+  Rank 5: Resume 55953734 (score: 0.286)
+  Rank 6: Resume 21156767 (score: 0.279)
+  Rank 7: Resume 14871762 (score: 0.254)
+  Rank 8: Resume 62994611 (score: 0.252)
+  Rank 9: Resume 95429627 (score: 0.234)
+  Rank 10: Resume 13454871 (score: 0.224)
+
+================================================================================
+IMPROVEMENT RECOMMENDATIONS
+================================================================================
+  entity_type                      category        missing_item frequency priority                                                     recommendation
+0       SKILL  Option B: Aggregate Priority                Java      2/10      LOW                Learn Java (LOW priority: 2/10 top resumes have it)
+1       SKILL  Option B: Aggregate Priority               Excel      2/10      LOW               Learn Excel (LOW priority: 2/10 top resumes have it)
+2       SKILL  Option B: Aggregate Priority  Project management      2/10      LOW  Learn Project management (LOW priority: 2/10 top resumes have it)
+3       SKILL  Option B: Aggregate Priority                HTML      2/10      LOW                Learn HTML (LOW priority: 2/10 top resumes have it)
+4       SKILL  Option B: Aggregate Priority                 C++      1/10      LOW                 Learn C++ (LOW priority: 1/10 top resumes have it)

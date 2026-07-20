@@ -1,0 +1,6 @@
+entity_type,category,missing_item,frequency,priority,recommendation
+SKILL,Option B: Aggregate Priority,Java,2/10,LOW,Learn Java (LOW priority: 2/10 top resumes have it)
+SKILL,Option B: Aggregate Priority,Excel,2/10,LOW,Learn Excel (LOW priority: 2/10 top resumes have it)
+SKILL,Option B: Aggregate Priority,Project management,2/10,LOW,Learn Project management (LOW priority: 2/10 top resumes have it)
+SKILL,Option B: Aggregate Priority,HTML,2/10,LOW,Learn HTML (LOW priority: 2/10 top resumes have it)
+SKILL,Option B: Aggregate Priority,C++,1/10,LOW,Learn C++ (LOW priority: 1/10 top resumes have it)

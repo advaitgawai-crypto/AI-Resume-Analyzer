@@ -1,0 +1,12 @@
+entity_type,category,missing_item,frequency,priority,recommendation
+SKILL,Option B: Aggregate Priority,SQL,5/10,MEDIUM,Learn SQL (MEDIUM priority: 5/10 top resumes have it)
+SKILL,Option B: Aggregate Priority,Excel,2/10,LOW,Learn Excel (LOW priority: 2/10 top resumes have it)
+SKILL,Option B: Aggregate Priority,project management,2/10,LOW,Learn project management (LOW priority: 2/10 top resumes have it)
+SKILL,Option B: Aggregate Priority,python,2/10,LOW,Learn python (LOW priority: 2/10 top resumes have it)
+SKILL,Option B: Aggregate Priority,C++,2/10,LOW,Learn C++ (LOW priority: 2/10 top resumes have it)
+JOB_TITLE,Option B: Aggregate Priority,customer service,2/10,LOW,Learn customer service (LOW priority: 2/10 top resumes have it)
+JOB_TITLE,Option B: Aggregate Priority,Software Engineer,1/10,LOW,Learn Software Engineer (LOW priority: 1/10 top resumes have it)
+JOB_TITLE,Option B: Aggregate Priority,ANALYST,1/10,LOW,Learn ANALYST (LOW priority: 1/10 top resumes have it)
+JOB_TITLE,Option B: Aggregate Priority,SPECIALIST,1/10,LOW,Learn SPECIALIST (LOW priority: 1/10 top resumes have it)
+JOB_TITLE,Option B: Aggregate Priority,SOFTWARE DEVELOPER,1/10,LOW,Learn SOFTWARE DEVELOPER (LOW priority: 1/10 top resumes have it)
+DEGREE,Option B: Aggregate Priority,Bachelor of Engineering,2/10,LOW,Learn Bachelor of Engineering (LOW priority: 2/10 top resumes have it)

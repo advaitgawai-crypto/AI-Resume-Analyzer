@@ -1,0 +1,42 @@
+================================================================================
+PHASE 5: MATCHING ENGINE SUMMARY
+================================================================================
+
+Job Posting: senior_python_engineer.pdf
+Timestamp: 20260720_091912
+
+EXTRACTED JOB REQUIREMENTS:
+  SKILL: Python
+  JOB_TITLE: Developer
+  DEGREE: Bachelor of Science, Master of Science
+  INSTITUTION: None
+  CERTIFICATION: None
+  EXPERIENCE_DURATION: 7 years
+
+TOP MATCHED RESUMES (Overall):
+  Rank 1: Resume 55953734 (score: 0.545)
+  Rank 2: Resume 27152464 (score: 0.428)
+  Rank 3: Resume 36434348 (score: 0.409)
+  Rank 4: Resume 33872500 (score: 0.409)
+  Rank 5: Resume 20566550 (score: 0.388)
+  Rank 6: Resume 62994611 (score: 0.385)
+  Rank 7: Resume 34953092 (score: 0.353)
+  Rank 8: Resume 13405733 (score: 0.348)
+  Rank 9: Resume 12011623 (score: 0.335)
+  Rank 10: Resume 32985311 (score: 0.286)
+
+================================================================================
+IMPROVEMENT RECOMMENDATIONS
+================================================================================
+   entity_type                      category             missing_item frequency priority                                                          recommendation
+0        SKILL  Option B: Aggregate Priority                      SQL      5/10   MEDIUM                   Learn SQL (MEDIUM priority: 5/10 top resumes have it)
+1        SKILL  Option B: Aggregate Priority                    Excel      2/10      LOW                    Learn Excel (LOW priority: 2/10 top resumes have it)
+2        SKILL  Option B: Aggregate Priority       project management      2/10      LOW       Learn project management (LOW priority: 2/10 top resumes have it)
+3        SKILL  Option B: Aggregate Priority                   python      2/10      LOW                   Learn python (LOW priority: 2/10 top resumes have it)
+4        SKILL  Option B: Aggregate Priority                      C++      2/10      LOW                      Learn C++ (LOW priority: 2/10 top resumes have it)
+5    JOB_TITLE  Option B: Aggregate Priority         customer service      2/10      LOW         Learn customer service (LOW priority: 2/10 top resumes have it)
+6    JOB_TITLE  Option B: Aggregate Priority        Software Engineer      1/10      LOW        Learn Software Engineer (LOW priority: 1/10 top resumes have it)
+7    JOB_TITLE  Option B: Aggregate Priority                  ANALYST      1/10      LOW                  Learn ANALYST (LOW priority: 1/10 top resumes have it)
+8    JOB_TITLE  Option B: Aggregate Priority               SPECIALIST      1/10      LOW               Learn SPECIALIST (LOW priority: 1/10 top resumes have it)
+9    JOB_TITLE  Option B: Aggregate Priority       SOFTWARE DEVELOPER      1/10      LOW       Learn SOFTWARE DEVELOPER (LOW priority: 1/10 top resumes have it)
+10      DEGREE  Option B: Aggregate Priority  Bachelor of Engineering      2/10      LOW  Learn Bachelor of Engineering (LOW priority: 2/10 top resumes have it)
