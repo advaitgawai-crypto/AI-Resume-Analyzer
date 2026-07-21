@@ -1,0 +1,104 @@
+================================================================================
+CAREER MATCH ANALYSIS & SKILL DEVELOPMENT PLAN
+================================================================================
+
+Job Posting: gagan_resume_v2_260721_091748.pdf
+Analysis Date: 20260721_092915
+
+JOB REQUIREMENTS ANALYSIS
+--------------------------------------------------------------------------------
+Required Experience: None years
+
+Core Skills Required (4 total):
+  • Python
+  • C++
+  • Java
+  • Linux
+
+================================================================================
+TOP 10 MATCHED CANDIDATES
+================================================================================
+
+These candidates are the closest matches for this role:
+
+  1. Resume 12415691
+     Overall Match: 30.1%
+     Skill Match: 82.8%
+
+  2. Resume 54227873
+     Overall Match: 28.3%
+     Skill Match: 77.8%
+
+  3. Resume 10265057
+     Overall Match: 26.4%
+     Skill Match: 72.5%
+
+  4. Resume 22890839
+     Overall Match: 26.2%
+     Skill Match: 72.2%
+
+  5. Resume 19090468
+     Overall Match: 26.1%
+     Skill Match: 71.9%
+
+  6. Resume 18297650
+     Overall Match: 26.0%
+     Skill Match: 55.4%
+
+  7. Resume 22946204
+     Overall Match: 25.2%
+     Skill Match: 44.3%
+
+  8. Resume 26071861
+     Overall Match: 23.3%
+     Skill Match: 64.0%
+
+  9. Resume 14871762
+     Overall Match: 23.1%
+     Skill Match: 63.5%
+
+  10. Resume 20824105
+     Overall Match: 22.7%
+     Skill Match: 62.4%
+
+================================================================================
+YOUR PERSONALIZED SKILL DEVELOPMENT PLAN
+================================================================================
+
+
+1. REQUIRED SKILLS FOR THIS ROLE
+--------------------------------------------------------------------------------
+  C++ | Java | Linux | Python
+
+
+2. YOUR STRENGTHS
+--------------------------------------------------------------------------------
+  [STRENGTH] C++ | Java | Linux | Python
+  You already have 4 of the required skills! Great foundation!
+
+
+3. SKILLS TO DEVELOP
+--------------------------------------------------------------------------------
+
+  Focus on these technical skills to match top candidates:
+
+  [LOW] Excel
+     Priority: LOW (found in 2/10 top candidates)
+  [LOW] SQL
+     Priority: LOW (found in 2/10 top candidates)
+  [LOW] Word
+     Priority: LOW (found in 2/10 top candidates)
+  [LOW] project management
+     Priority: LOW (found in 1/10 top candidates)
+  [LOW] CSS
+     Priority: LOW (found in 1/10 top candidates)
+  [LOW] PowerPoint
+     Priority: LOW (found in 1/10 top candidates)
+  [LOW] Project Management
+     Priority: LOW (found in 1/10 top candidates)
+  [LOW] linux
+     Priority: LOW (found in 1/10 top candidates)
+
+================================================================================
+END OF REPORT
+================================================================================
