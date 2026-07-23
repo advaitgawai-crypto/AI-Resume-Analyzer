@@ -1,13 +1,31 @@
 #!/usr/bin/env python3
 """
 ================================================================================
-AI RESUME ANALYZER - Single File Runner
+COMPLETE JOB ANALYZER - Analyze Job + Find Matching Jobs (International)
 ================================================================================
 Usage:
-  python resume_analyzer.py <path_to_pdf>
+  python complete_analyzer.py <job_posting.pdf> <location> <country_code>
 
-Example:
-  python resume_analyzer.py "data\input\senior_python_engineer.pdf"
+Examples:
+  python complete_analyzer.py "data\\input\\job.pdf" "Bangalore" "in"      # India
+  python complete_analyzer.py "data\\input\\job.pdf" "New York" "us"       # USA
+  python complete_analyzer.py "data\\input\\job.pdf" "London" "gb"         # UK
+  python complete_analyzer.py "data\\input\\job.pdf" "Toronto" "ca"        # Canada
+  python complete_analyzer.py "data\\input\\job.pdf" "Sydney" "au"         # Australia
+  python complete_analyzer.py "data\\input\\job.pdf" "Berlin" "de"         # Germany
+  python complete_analyzer.py "data\\input\\job.pdf" "Paris" "fr"          # France
+
+Supported Countries:
+  in (India), us (USA), gb (UK), ca (Canada), au (Australia)
+  de (Germany), fr (France), nl (Netherlands), it (Italy), es (Spain)
+  se (Sweden), nz (New Zealand), sg (Singapore)
+
+Pipeline:
+1. Parse job posting PDF
+2. Extract entities (skills, titles, degrees, etc.)
+3. Generate skill development plan
+4. Search Adzuna for matching jobs (international)
+5. Rank and display results
 ================================================================================
 """
 
@@ -19,6 +37,7 @@ import spacy
 import pandas as pd
 import numpy as np
 import pdfplumber
+import requests
 from pathlib import Path
 from datetime import datetime
 from sklearn.metrics.pairwise import cosine_similarity
@@ -41,6 +60,10 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 RESUMES_WITH_ENTITIES = DATA_PROCESSED / "resumes_with_entities.csv"
 NER_MODEL_PATH = MODELS_DIR / "ner_model_v2"
 
+# Adzuna API credentials
+ADZUNA_APP_ID = "aacca97d"
+ADZUNA_APP_KEY = "315d396533cd22919c1d827810601d77"
+
 WEIGHTS = {
     'SKILL': 0.40,
     'JOB_TITLE': 0.25,
@@ -59,13 +82,13 @@ ENTITY_TYPES = ['SKILL', 'JOB_TITLE', 'DEGREE', 'INSTITUTION', 'CERTIFICATION', 
 
 
 # ============================================================================
-# STEP FUNCTIONS (from phase5_matching_engine.py)
+# PHASE 5 FUNCTIONS (Resume Analyzer)
 # ============================================================================
 
 def load_spacy_model(model_path: Path) -> spacy.Language:
     try:
         nlp = spacy.load(str(model_path))
-        print(f"✓ Loaded NER model from {model_path}")
+        print(f"✓ Loaded NER model")
         return nlp
     except Exception as e:
         print(f"✗ Failed to load NER model: {e}")
@@ -106,24 +129,7 @@ def extract_experience_duration(text: str, nlp: spacy.Language) -> Optional[int]
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             years = int(match.group(2)) if len(match.groups()) == 2 else int(match.group(1))
-            print(f"  Regex found: {years} years experience")
             return years
-
-    doc = nlp(text)
-    experience_markers = ['experience', 'years', 'yrs', 'worked', 'employed', 'senior', 'junior', 'lead']
-    for ent in doc.ents:
-        if ent.label_ in ['DATE', 'CARDINAL']:
-            context = text[max(0, ent.start_char - 50):ent.end_char + 50].lower()
-            if any(marker in context for marker in experience_markers):
-                try:
-                    num_match = re.search(r'\d+', ent.text)
-                    if num_match:
-                        years = int(num_match.group())
-                        if 0 < years < 100:
-                            print(f"  NLP fallback found: {years} years experience")
-                            return years
-                except:
-                    pass
     return None
 
 
@@ -136,7 +142,6 @@ def vectorize_entities(entities: Dict[str, List[str]], vectorizers: Dict) -> Dic
                 vector = vectorizers[entity_type].transform([entity_text])
                 job_vectors[entity_type] = vector
             except Exception as e:
-                print(f"  Warning: Failed to vectorize {entity_type}: {e}")
                 job_vectors[entity_type] = None
     return job_vectors
 
@@ -149,11 +154,8 @@ def load_phase4_vectorizers(data_dir: Path) -> Dict:
             try:
                 with open(vectorizer_path, 'rb') as f:
                     vectorizers[entity_type] = pickle.load(f)
-                print(f"✓ Loaded vectorizer for {entity_type}")
             except Exception as e:
-                print(f"✗ Failed to load vectorizer for {entity_type}: {e}")
-        else:
-            print(f"⚠ Vectorizer not found: {vectorizer_path}")
+                pass
     return vectorizers
 
 
@@ -164,11 +166,8 @@ def load_resume_vectors(data_dir: Path) -> Dict:
         if vector_path.exists():
             try:
                 resume_vectors[entity_type] = load_npz(str(vector_path))
-                print(f"✓ Loaded resume vectors for {entity_type}")
             except Exception as e:
-                print(f"✗ Failed to load resume vectors for {entity_type}: {e}")
-        else:
-            print(f"⚠ Resume vectors not found: {vector_path}")
+                pass
     return resume_vectors
 
 
@@ -180,7 +179,6 @@ def calculate_similarity_scores(job_vectors: Dict, resume_vectors: Dict) -> Dict
                 sim = cosine_similarity(job_vectors[entity_type], resume_vectors[entity_type])[0]
                 similarities[entity_type] = sim
             except Exception as e:
-                print(f"  Warning: Failed to compute similarity for {entity_type}: {e}")
                 similarities[entity_type] = np.zeros(resume_vectors[entity_type].shape[0])
         else:
             similarities[entity_type] = None
@@ -220,7 +218,6 @@ def rank_resumes_by_category(similarities: Dict, resume_ids: np.ndarray, job_exp
                     exp_scores.append(handle_experience_distance(job_experience, resume_exp))
                 scores = np.array(exp_scores)
             except Exception as e:
-                print(f"  Warning: Failed to compute experience scores: {e}")
                 scores = np.zeros(len(resume_df))
         elif similarities[entity_type] is not None:
             scores = similarities[entity_type]
@@ -343,14 +340,10 @@ def generate_improvement_recommendations(job_entities: Dict, rankings: Dict,
     return pd.DataFrame(recommendations)
 
 
-# ============================================================================
-# DISPLAY REPORT (from view_phase5_results.py, minus TOP 10 CANDIDATES)
-# ============================================================================
-
-def display_report(overall_df: pd.DataFrame, skill_df: pd.DataFrame,
-                   recommendations_df: pd.DataFrame, job_entities: Dict,
-                   job_experience: Optional[int], pdf_name: str) -> None:
-
+def display_report(job_entities: Dict, job_experience: Optional[int], pdf_name: str,
+                   recommendations_df: pd.DataFrame) -> None:
+    """Display career analysis report with skill development plan"""
+    
     print("\n" + "=" * 100)
     print("CAREER MATCH ANALYSIS & SKILL DEVELOPMENT PLAN")
     print("=" * 100)
@@ -411,24 +404,153 @@ def display_report(overall_df: pd.DataFrame, skill_df: pd.DataFrame,
                 if pd.notna(row.get('analysis')):
                     print(f"  {row['analysis']}")
 
-    print("\n" + "=" * 100)
-    print("END OF REPORT")
-    print("=" * 100 + "\n")
+
+# ============================================================================
+# JOB SEARCH FUNCTIONS (Adzuna Integration)
+# ============================================================================
+
+def search_jobs_adzuna(keywords, location, country_code="in", results_per_page=30):
+    """
+    Search for jobs using Adzuna API (International)
+    
+    Args:
+        keywords: List of skills to search
+        location: City name
+        country_code: Country code (in, us, gb, ca, au, de, fr, nl, it, es, se, nz, sg)
+        results_per_page: Number of results
+    """
+    
+    # Map country codes to country names
+    country_map = {
+        "in": "India",
+        "us": "USA",
+        "gb": "UK",
+        "ca": "Canada",
+        "au": "Australia",
+        "de": "Germany",
+        "fr": "France",
+        "nl": "Netherlands",
+        "it": "Italy",
+        "es": "Spain",
+        "se": "Sweden",
+        "nz": "New Zealand",
+        "sg": "Singapore",
+    }
+    
+    country_name = country_map.get(country_code.lower(), "Unknown")
+    url = f"https://api.adzuna.com/v1/api/jobs/{country_code.lower()}/search/1"
+    query = " ".join(keywords)
+    
+    params = {
+        "app_id": ADZUNA_APP_ID,
+        "app_key": ADZUNA_APP_KEY,
+        "what": query,
+        "where": location,
+        "results_per_page": results_per_page
+    }
+    
+    try:
+        print(f"\n🔍 Searching Adzuna for: '{query}' in {location}, {country_name}...")
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if 'results' not in data:
+            print(f"✗ No results in API response")
+            return []
+        
+        jobs = []
+        for job in data['results']:
+            jobs.append({
+                'job_title': job.get('title', ''),
+                'company': job.get('company', {}).get('display_name', ''),
+                'location': job.get('location', {}).get('display_name', ''),
+                'salary_min': job.get('salary_min', None),
+                'salary_max': job.get('salary_max', None),
+                'salary_currency': job.get('salary_currency_code', 'USD'),
+                'description': job.get('description', ''),
+                'posting_date': job.get('created', ''),
+                'application_url': job.get('redirect_url', '')
+            })
+        
+        print(f"✓ Found {len(jobs)} jobs on Adzuna")
+        return jobs
+    
+    except Exception as e:
+        print(f"✗ Error searching jobs: {e}")
+        return []
+
+
+def score_jobs(jobs, required_skills):
+    """Score each job based on skill match"""
+    
+    print(f"\n📊 Scoring {len(jobs)} jobs based on skill match...")
+    
+    for job in jobs:
+        description_lower = job['description'].lower()
+        match_count = 0
+        
+        for skill in required_skills:
+            if skill.lower() in description_lower:
+                match_count += 1
+        
+        match_score = (match_count / max(len(required_skills), 1)) * 100
+        job['match_score'] = match_score
+        job['matching_skills'] = match_count
+    
+    return jobs
+
+
+def display_jobs(jobs, top_n=15):
+    """Display top matching jobs"""
+    
+    jobs = sorted(jobs, key=lambda x: x['match_score'], reverse=True)
+    
+    print("\n" + "="*100)
+    print("TOP JOBS FOR YOU")
+    print("="*100 + "\n")
+    
+    for i, job in enumerate(jobs[:top_n], 1):
+        print(f"{i}. {job['job_title']}")
+        print(f"   Company: {job['company']}")
+        print(f"   Location: {job['location']}")
+        print(f"   Match: {job['match_score']:.0f}% ({job['matching_skills']} skills matched) ⭐")
+        
+        if job['salary_min'] and job['salary_max']:
+            print(f"   Salary: ₹{job['salary_min']:,} - ₹{job['salary_max']:,} {job['salary_currency']}")
+        
+        print(f"   Apply: {job['application_url']}")
+        print()
+    
+    print("="*100)
+    print(f"Displayed top {min(top_n, len(jobs))} of {len(jobs)} jobs")
+    print("="*100 + "\n")
+    
+    return jobs[:top_n]
 
 
 # ============================================================================
 # MAIN PIPELINE
 # ============================================================================
 
-def run(job_posting_pdf: Path) -> None:
+def run(job_posting_pdf: Path, location: str, country_code: str = "in") -> None:
+    """Complete pipeline: analyze job + find matching jobs (international)"""
+    
     print("\n" + "=" * 80)
-    print("AI RESUME ANALYZER")
+    print("COMPLETE JOB ANALYZER")
     print("=" * 80 + "\n")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    # ════════════════════════════════════════════════════════════════════════
+    # PART 1: ANALYZE JOB POSTING
+    # ════════════════════════════════════════════════════════════════════════
+    
+    print("[PART 1/2] ANALYZING JOB POSTING\n")
+
     # Step 1: Load prerequisites
-    print("[1/9] Loading prerequisites...")
+    print("[1/4] Loading prerequisites...")
     nlp = load_spacy_model(NER_MODEL_PATH)
     try:
         resume_df = pd.read_csv(RESUMES_WITH_ENTITIES)
@@ -439,12 +561,12 @@ def run(job_posting_pdf: Path) -> None:
     resume_ids = resume_df['resume_id'].values
 
     # Step 2: Extract PDF text
-    print("\n[2/9] Extracting text from PDF...")
+    print("\n[2/4] Extracting text from job posting PDF...")
     job_text = extract_pdf_text(job_posting_pdf)
     print(f"  Extracted {len(job_text)} characters")
 
     # Step 3: Extract entities
-    print("\n[3/9] Extracting entities...")
+    print("\n[3/4] Extracting entities from job posting...")
     job_entities = extract_entities_ner(job_text, nlp)
     for etype, ents in job_entities.items():
         print(f"  {etype}: {len(ents)} entities")
@@ -452,49 +574,60 @@ def run(job_posting_pdf: Path) -> None:
             print(f"    Examples: {', '.join(ents[:3])}")
 
     # Step 4: Extract experience
-    print("\n[4/9] Extracting experience duration...")
+    print("\n[4/4] Extracting experience duration...")
     job_experience = extract_experience_duration(job_text, nlp)
     print(f"  Required: {job_experience} years" if job_experience else "  No experience requirement found")
 
-    # Step 5: Load vectorizers & vectors
-    print("\n[5/9] Loading vectorizers and resume vectors...")
+    # Load vectorizers and vectors for Phase 5
+    print("\n[Loading vectorizers and resume vectors...]")
     vectorizers = load_phase4_vectorizers(DATA_PROCESSED)
     resume_vectors = load_resume_vectors(DATA_PROCESSED)
 
-    # Step 6: Vectorize job entities
-    print("\n[6/9] Vectorizing job posting entities...")
+    # Vectorize job entities
     job_vectors = vectorize_entities(job_entities, vectorizers)
-    for etype, vec in job_vectors.items():
-        if vec is not None:
-            print(f"  ✓ {etype}: vectorized ({vec.shape[1]} dimensions)")
 
-    # Step 7: Calculate similarities
-    print("\n[7/9] Calculating similarity scores...")
+    # Calculate similarities
     similarities = calculate_similarity_scores(job_vectors, resume_vectors)
 
-    # Step 8: Rank resumes
-    print("\n[8/9] Ranking resumes...")
+    # Rank resumes
     rankings = rank_resumes_by_category(similarities, resume_ids, job_experience, resume_df, top_n=TOP_N)
-    for etype, df in rankings.items():
-        print(f"  ✓ {etype}: top {len(df)} ranked")
 
-    # Step 9: Generate outputs
-    print("\n[9/9] Generating outputs...")
-    for etype, df in rankings.items():
-        out = OUTPUT_DIR / f"{etype.lower()}_rankings_{timestamp}.csv"
-        df.to_csv(out, index=False)
-
-    overall_df = calculate_overall_score(rankings)
-    overall_df.to_csv(OUTPUT_DIR / f"overall_rankings_{timestamp}.csv", index=False)
-
+    # Generate recommendations
     recommendations_df = generate_improvement_recommendations(job_entities, rankings, resume_df, top_n=IMPROVEMENT_TOP_N)
-    recommendations_df.to_csv(OUTPUT_DIR / f"improvement_recommendations_{timestamp}.csv", index=False)
 
-    print(f"  ✓ CSVs saved to: {OUTPUT_DIR}")
+    # Display job requirements + skill development plan
+    display_report(job_entities, job_experience, job_posting_pdf.name, recommendations_df)
 
-    # Display report
-    display_report(overall_df, rankings['SKILL'], recommendations_df,
-                   job_entities, job_experience, job_posting_pdf.name)
+    # ════════════════════════════════════════════════════════════════════════
+    # PART 2: SEARCH FOR MATCHING JOBS
+    # ════════════════════════════════════════════════════════════════════════
+    
+    print("\n" + "=" * 100)
+    print("[PART 2/2] SEARCHING FOR MATCHING JOBS\n")
+
+    # Extract skills from job posting
+    required_skills = job_entities.get('SKILL', [])
+    
+    if not required_skills:
+        print("⚠️  No skills found in job posting. Skipping job search.")
+        return
+    
+    # Search Adzuna (with country code)
+    jobs = search_jobs_adzuna(required_skills, location, country_code=country_code, results_per_page=30)
+    
+    if not jobs:
+        print("✗ No jobs found")
+        return
+    
+    # Score jobs
+    jobs = score_jobs(jobs, required_skills)
+    
+    # Display top jobs
+    top_jobs = display_jobs(jobs, top_n=15)
+    
+    print("="*100)
+    print("ANALYSIS COMPLETE ✓")
+    print("="*100 + "\n")
 
 
 # ============================================================================
@@ -502,14 +635,21 @@ def run(job_posting_pdf: Path) -> None:
 # ============================================================================
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        pdf_path = Path(sys.argv[1])
-    else:
-        pdf_path = PROJECT_ROOT / "data" / "input" / "job_posting.pdf"
-
+    if len(sys.argv) < 2:
+        print(f"Usage: python complete_analyzer.py <job_posting.pdf> <location> <country_code>")
+        print(f"\nExamples:")
+        print(f"  python complete_analyzer.py \"data\\input\\job.pdf\" \"Bangalore\" \"in\"    # India")
+        print(f"  python complete_analyzer.py \"data\\input\\job.pdf\" \"New York\" \"us\"   # USA")
+        print(f"  python complete_analyzer.py \"data\\input\\job.pdf\" \"London\" \"gb\"     # UK")
+        print(f"  python complete_analyzer.py \"data\\input\\job.pdf\" \"Toronto\" \"ca\"    # Canada")
+        sys.exit(1)
+    
+    pdf_path = Path(sys.argv[1])
+    location = sys.argv[2] if len(sys.argv) > 2 else "Bangalore"
+    country_code = sys.argv[3] if len(sys.argv) > 3 else "in"
+    
     if not pdf_path.exists():
         print(f"✗ PDF not found: {pdf_path}")
-        print("\nUsage: python resume_analyzer.py <path_to_pdf>")
         sys.exit(1)
-
-    run(pdf_path)
+    
+    run(pdf_path, location, country_code)

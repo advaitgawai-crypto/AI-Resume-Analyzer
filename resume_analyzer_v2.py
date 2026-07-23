@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """
 ================================================================================
-AI RESUME ANALYZER - Single File Runner
+RESUME ANALYZER - Analyze Job Posting & Generate Skill Development Plan
 ================================================================================
 Usage:
-  python resume_analyzer.py <path_to_pdf>
+  python resume_analyzer.py <job_posting.pdf>
 
 Example:
-  python resume_analyzer.py "data\input\senior_python_engineer.pdf"
+  python resume_analyzer.py "data\\input\\senior_python_engineer.pdf"
+
+This script:
+1. Parses job posting PDF
+2. Extracts entities (skills, titles, degrees, experience)
+3. Compares against 2,716 resumes in database
+4. Generates personalized skill development plan
+5. Displays comprehensive report
 ================================================================================
 """
 
@@ -59,13 +66,13 @@ ENTITY_TYPES = ['SKILL', 'JOB_TITLE', 'DEGREE', 'INSTITUTION', 'CERTIFICATION', 
 
 
 # ============================================================================
-# STEP FUNCTIONS (from phase5_matching_engine.py)
+# FUNCTIONS
 # ============================================================================
 
 def load_spacy_model(model_path: Path) -> spacy.Language:
     try:
         nlp = spacy.load(str(model_path))
-        print(f"✓ Loaded NER model from {model_path}")
+        print(f"✓ Loaded NER model")
         return nlp
     except Exception as e:
         print(f"✗ Failed to load NER model: {e}")
@@ -106,24 +113,7 @@ def extract_experience_duration(text: str, nlp: spacy.Language) -> Optional[int]
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             years = int(match.group(2)) if len(match.groups()) == 2 else int(match.group(1))
-            print(f"  Regex found: {years} years experience")
             return years
-
-    doc = nlp(text)
-    experience_markers = ['experience', 'years', 'yrs', 'worked', 'employed', 'senior', 'junior', 'lead']
-    for ent in doc.ents:
-        if ent.label_ in ['DATE', 'CARDINAL']:
-            context = text[max(0, ent.start_char - 50):ent.end_char + 50].lower()
-            if any(marker in context for marker in experience_markers):
-                try:
-                    num_match = re.search(r'\d+', ent.text)
-                    if num_match:
-                        years = int(num_match.group())
-                        if 0 < years < 100:
-                            print(f"  NLP fallback found: {years} years experience")
-                            return years
-                except:
-                    pass
     return None
 
 
@@ -136,7 +126,6 @@ def vectorize_entities(entities: Dict[str, List[str]], vectorizers: Dict) -> Dic
                 vector = vectorizers[entity_type].transform([entity_text])
                 job_vectors[entity_type] = vector
             except Exception as e:
-                print(f"  Warning: Failed to vectorize {entity_type}: {e}")
                 job_vectors[entity_type] = None
     return job_vectors
 
@@ -149,11 +138,8 @@ def load_phase4_vectorizers(data_dir: Path) -> Dict:
             try:
                 with open(vectorizer_path, 'rb') as f:
                     vectorizers[entity_type] = pickle.load(f)
-                print(f"✓ Loaded vectorizer for {entity_type}")
             except Exception as e:
-                print(f"✗ Failed to load vectorizer for {entity_type}: {e}")
-        else:
-            print(f"⚠ Vectorizer not found: {vectorizer_path}")
+                pass
     return vectorizers
 
 
@@ -164,11 +150,8 @@ def load_resume_vectors(data_dir: Path) -> Dict:
         if vector_path.exists():
             try:
                 resume_vectors[entity_type] = load_npz(str(vector_path))
-                print(f"✓ Loaded resume vectors for {entity_type}")
             except Exception as e:
-                print(f"✗ Failed to load resume vectors for {entity_type}: {e}")
-        else:
-            print(f"⚠ Resume vectors not found: {vector_path}")
+                pass
     return resume_vectors
 
 
@@ -180,7 +163,6 @@ def calculate_similarity_scores(job_vectors: Dict, resume_vectors: Dict) -> Dict
                 sim = cosine_similarity(job_vectors[entity_type], resume_vectors[entity_type])[0]
                 similarities[entity_type] = sim
             except Exception as e:
-                print(f"  Warning: Failed to compute similarity for {entity_type}: {e}")
                 similarities[entity_type] = np.zeros(resume_vectors[entity_type].shape[0])
         else:
             similarities[entity_type] = None
@@ -220,7 +202,6 @@ def rank_resumes_by_category(similarities: Dict, resume_ids: np.ndarray, job_exp
                     exp_scores.append(handle_experience_distance(job_experience, resume_exp))
                 scores = np.array(exp_scores)
             except Exception as e:
-                print(f"  Warning: Failed to compute experience scores: {e}")
                 scores = np.zeros(len(resume_df))
         elif similarities[entity_type] is not None:
             scores = similarities[entity_type]
@@ -343,14 +324,10 @@ def generate_improvement_recommendations(job_entities: Dict, rankings: Dict,
     return pd.DataFrame(recommendations)
 
 
-# ============================================================================
-# DISPLAY REPORT (from view_phase5_results.py, minus TOP 10 CANDIDATES)
-# ============================================================================
-
-def display_report(overall_df: pd.DataFrame, skill_df: pd.DataFrame,
-                   recommendations_df: pd.DataFrame, job_entities: Dict,
-                   job_experience: Optional[int], pdf_name: str) -> None:
-
+def display_report(job_entities: Dict, job_experience: Optional[int], pdf_name: str,
+                   recommendations_df: pd.DataFrame) -> None:
+    """Display career analysis report with skill development plan"""
+    
     print("\n" + "=" * 100)
     print("CAREER MATCH ANALYSIS & SKILL DEVELOPMENT PLAN")
     print("=" * 100)
@@ -421,14 +398,16 @@ def display_report(overall_df: pd.DataFrame, skill_df: pd.DataFrame,
 # ============================================================================
 
 def run(job_posting_pdf: Path) -> None:
+    """Main pipeline: analyze job posting"""
+    
     print("\n" + "=" * 80)
-    print("AI RESUME ANALYZER")
+    print("RESUME ANALYZER - Analyze Job Posting")
     print("=" * 80 + "\n")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Step 1: Load prerequisites
-    print("[1/9] Loading prerequisites...")
+    print("[1/6] Loading prerequisites...")
     nlp = load_spacy_model(NER_MODEL_PATH)
     try:
         resume_df = pd.read_csv(RESUMES_WITH_ENTITIES)
@@ -439,12 +418,12 @@ def run(job_posting_pdf: Path) -> None:
     resume_ids = resume_df['resume_id'].values
 
     # Step 2: Extract PDF text
-    print("\n[2/9] Extracting text from PDF...")
+    print("\n[2/6] Extracting text from PDF...")
     job_text = extract_pdf_text(job_posting_pdf)
     print(f"  Extracted {len(job_text)} characters")
 
     # Step 3: Extract entities
-    print("\n[3/9] Extracting entities...")
+    print("\n[3/6] Extracting entities...")
     job_entities = extract_entities_ner(job_text, nlp)
     for etype, ents in job_entities.items():
         print(f"  {etype}: {len(ents)} entities")
@@ -452,49 +431,30 @@ def run(job_posting_pdf: Path) -> None:
             print(f"    Examples: {', '.join(ents[:3])}")
 
     # Step 4: Extract experience
-    print("\n[4/9] Extracting experience duration...")
+    print("\n[4/6] Extracting experience duration...")
     job_experience = extract_experience_duration(job_text, nlp)
     print(f"  Required: {job_experience} years" if job_experience else "  No experience requirement found")
 
-    # Step 5: Load vectorizers & vectors
-    print("\n[5/9] Loading vectorizers and resume vectors...")
+    # Step 5: Vectorize and calculate similarities
+    print("\n[5/6] Vectorizing and calculating similarities...")
     vectorizers = load_phase4_vectorizers(DATA_PROCESSED)
     resume_vectors = load_resume_vectors(DATA_PROCESSED)
-
-    # Step 6: Vectorize job entities
-    print("\n[6/9] Vectorizing job posting entities...")
     job_vectors = vectorize_entities(job_entities, vectorizers)
-    for etype, vec in job_vectors.items():
-        if vec is not None:
-            print(f"  ✓ {etype}: vectorized ({vec.shape[1]} dimensions)")
-
-    # Step 7: Calculate similarities
-    print("\n[7/9] Calculating similarity scores...")
     similarities = calculate_similarity_scores(job_vectors, resume_vectors)
 
-    # Step 8: Rank resumes
-    print("\n[8/9] Ranking resumes...")
+    # Step 6: Rank and generate recommendations
+    print("\n[6/6] Ranking resumes and generating recommendations...")
     rankings = rank_resumes_by_category(similarities, resume_ids, job_experience, resume_df, top_n=TOP_N)
-    for etype, df in rankings.items():
-        print(f"  ✓ {etype}: top {len(df)} ranked")
-
-    # Step 9: Generate outputs
-    print("\n[9/9] Generating outputs...")
-    for etype, df in rankings.items():
-        out = OUTPUT_DIR / f"{etype.lower()}_rankings_{timestamp}.csv"
-        df.to_csv(out, index=False)
-
     overall_df = calculate_overall_score(rankings)
-    overall_df.to_csv(OUTPUT_DIR / f"overall_rankings_{timestamp}.csv", index=False)
-
     recommendations_df = generate_improvement_recommendations(job_entities, rankings, resume_df, top_n=IMPROVEMENT_TOP_N)
-    recommendations_df.to_csv(OUTPUT_DIR / f"improvement_recommendations_{timestamp}.csv", index=False)
 
-    print(f"  ✓ CSVs saved to: {OUTPUT_DIR}")
+    # Save outputs
+    overall_df.to_csv(OUTPUT_DIR / f"overall_rankings_{timestamp}.csv", index=False)
+    recommendations_df.to_csv(OUTPUT_DIR / f"improvement_recommendations_{timestamp}.csv", index=False)
+    print(f"\n✓ Results saved to: {OUTPUT_DIR}")
 
     # Display report
-    display_report(overall_df, rankings['SKILL'], recommendations_df,
-                   job_entities, job_experience, job_posting_pdf.name)
+    display_report(job_entities, job_experience, job_posting_pdf.name, recommendations_df)
 
 
 # ============================================================================
