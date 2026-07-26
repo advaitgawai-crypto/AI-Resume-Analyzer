@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resume Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="scanline"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark">◆</span>
+        <span class="brand-name">resume<span class="brand-accent">.match</span></span>
+      </div>
+      <div class="topbar-sub">local NLP engine · 2,716 resume corpus</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ============ STEP 01 — UPLOAD ============ -->
+    <section class="step" id="step-upload">
+      <div class="step-label"><span class="step-num">01</span> Upload job posting</div>
+
+      <div id="dropzone" class="dropzone">
+        <input type="file" id="file-input" accept="application/pdf" hidden />
+        <div class="dropzone-icon">⇪</div>
+        <div class="dropzone-text">
+          <strong>Drop a job posting PDF here</strong>
+          <span>or click to browse</span>
+        </div>
+        <div class="dropzone-file" id="dropzone-file"></div>
+      </div>
+
+      <div id="upload-status" class="status-line hidden"></div>
+    </section>
+
+    <!-- ============ STEP 02 — REPORT ============ -->
+    <section class="step hidden" id="step-report">
+      <div class="step-label"><span class="step-num">02</span> Match report</div>
+
+      <div class="card report-card">
+        <div class="report-head">
+          <div class="report-file" id="report-filename">—</div>
+          <div class="report-time" id="report-time">—</div>
+        </div>
+
+        <div class="report-grid">
+          <div class="report-block">
+            <div class="block-title">Required experience</div>
+            <div class="block-value mono" id="report-experience">—</div>
+          </div>
+          <div class="report-block">
+            <div class="block-title">Core skills</div>
+            <div class="tag-row" id="report-skills"></div>
+          </div>
+          <div class="report-block" id="report-titles-block">
+            <div class="block-title">Job titles detected</div>
+            <div class="tag-row" id="report-titles"></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="report-block">
+          <div class="block-title strength">✓ Your strengths</div>
+          <div class="tag-row tag-row--strength" id="report-strengths"></div>
+          <p class="block-note" id="report-strengths-note"></p>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="report-block">
+          <div class="block-title">Skills to develop</div>
+          <div class="skill-list" id="report-develop"></div>
+        </div>
+
+        <div class="divider" id="action-plan-divider"></div>
+
+        <div class="report-block" id="action-plan-block">
+          <div class="block-title">Action plan</div>
+          <p class="block-note action-plan-text" id="report-action-plan"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STEP 03 — JOB SEARCH (optional) ============ -->
+    <section class="step hidden" id="step-search">
+      <div class="step-label">
+        <span class="step-num">03</span> Find matching jobs
+        <span class="optional-tag">optional</span>
+      </div>
+
+      <div class="card search-card">
+        <div class="search-row">
+          <div class="field">
+            <label for="country-select">Country</label>
+            <select id="country-select">
+              <option value="">Select country</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="city-select">City</label>
+            <select id="city-select" disabled>
+              <option value="">Select country first</option>
+            </select>
+          </div>
+          <div class="field field-city-manual hidden" id="city-manual-field">
+            <label for="city-manual">City name</label>
+            <input type="text" id="city-manual" placeholder="e.g. Coimbatore" />
+          </div>
+        </div>
+        <button id="find-jobs-btn" class="btn-primary" disabled>Find jobs</button>
+        <p class="search-hint">Search is optional — the report above is yours either way.</p>
+      </div>
+
+      <div id="search-status" class="status-line hidden"></div>
+
+      <div id="jobs-results" class="jobs-grid"></div>
+    </section>
+
+  </main>
+
+  <footer class="foot">built for the AI Resume Analyzer pipeline · runs entirely on localhost</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
