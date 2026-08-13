@@ -28,6 +28,7 @@ that is fast.
 import os
 import re
 import sys
+import json
 import pickle
 import spacy
 import pandas as pd
@@ -50,20 +51,23 @@ from scipy.sparse import load_npz
 # CONFIGURATION
 # ============================================================================
 
-PROJECT_ROOT = Path(r"C:\Users\Advait Gawai\OneDrive\Desktop\AI resume Analyzer")
+PROJECT_ROOT = Path(__file__).parent.absolute()
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
 DATA_PROCESSED = PROJECT_ROOT / "data" / "processed"
 MODELS_DIR = PROJECT_ROOT / "models"
 UPLOAD_DIR = PROJECT_ROOT / "data" / "input" / "web_uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+# We use the NEW model which has 236 comprehensive skills built into the EntityRuler!
+NER_MODEL_PATH = PROJECT_ROOT / "models" / "ner_model_v3"
 RESUMES_WITH_ENTITIES = DATA_PROCESSED / "resumes_with_entities.csv"
-NER_MODEL_PATH = MODELS_DIR / "ner_model_v2"
 
 # JSearch API credentials (OpenWeb Ninja)
 # NOTE: it's better practice to load this from an environment variable
 # (e.g. os.environ.get("API_KEY")) instead of hardcoding it, especially
 # before this project ever goes public on GitHub.
 OPENWEBNINJA_API_KEY = "ak_03q5qhkasx5xo2e4x6mpu3bc3i4i2nuafrqm9jwle5it0rq"
+
 JSEARCH_URL = "https://api.openwebninja.com/jsearch/search-v2"
 
 WEIGHTS = {
@@ -105,6 +109,7 @@ def extract_pdf_text(pdf_path: Path) -> str:
 
 
 def extract_entities_ner(text: str, nlp_model: spacy.Language) -> Dict[str, List[str]]:
+    """Extract entities using the new enhanced spaCy NER model (v3)."""
     doc = nlp_model(text)
     entities = {ent_type: [] for ent_type in ENTITY_TYPES[:-1]}
     for ent in doc.ents:
@@ -335,23 +340,27 @@ print("=" * 80)
 print("Starting AI Resume Analyzer web server...")
 print("=" * 80)
 
-print("[Startup] Loading NER model...")
-nlp = spacy.load(str(NER_MODEL_PATH))
-print("✓ NER model loaded")
+print("[Startup] Loading upgraded NER model (v3)...")
+try:
+    nlp = spacy.load(str(NER_MODEL_PATH))
+    print("[OK] NER model loaded (v3 - multi-profession)")
+except Exception as e:
+    print(f"[WARN] NER model failed to load: {e}")
+    nlp = None
 
 print("[Startup] Loading resume database...")
 resume_df = pd.read_csv(RESUMES_WITH_ENTITIES)
 resume_ids = resume_df['resume_id'].values
-print(f"✓ Loaded {len(resume_df)} resumes")
+print(f"[OK] Loaded {len(resume_df)} resumes")
 
-print("[Startup] Loading Phase 4 vectorizers...")
+print("[Startup] Loading vectorizers...")
 vectorizers = {}
 for entity_type in ENTITY_TYPES[:-1]:
     vectorizer_path = DATA_PROCESSED / f"vectorizer_{entity_type.lower()}.pkl"
     if vectorizer_path.exists():
         with open(vectorizer_path, 'rb') as f:
             vectorizers[entity_type] = pickle.load(f)
-print(f"✓ Loaded {len(vectorizers)} vectorizers")
+print(f"[OK] Loaded {len(vectorizers)} vectorizers")
 
 print("[Startup] Loading resume vectors...")
 resume_vectors = {}
@@ -359,10 +368,10 @@ for entity_type in ENTITY_TYPES[:-1]:
     vector_path = DATA_PROCESSED / f"resume_vectors_{entity_type.lower()}.npz"
     if vector_path.exists():
         resume_vectors[entity_type] = load_npz(str(vector_path))
-print(f"✓ Loaded {len(resume_vectors)} resume vector sets")
+print(f"[OK] Loaded {len(resume_vectors)} resume vector sets")
 
 print("=" * 80)
-print("✓ Server ready!")
+print("[OK] Server ready! Open http://localhost:5000")
 print("=" * 80)
 
 
@@ -399,7 +408,9 @@ def api_analyze():
         # 1. Extract text
         job_text = extract_pdf_text(save_path)
 
-        # 2. Extract entities
+        # 2. Extract entities using our new v3 model
+        if nlp is None:
+            return jsonify({"error": "NER model unavailable"}), 500
         job_entities = extract_entities_ner(job_text, nlp)
 
         # 3. Extract experience

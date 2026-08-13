@@ -1,0 +1,21 @@
+======================================================================
+VECTORIZATION V2 - REBUILT WITH GEMINI-LABELED DATA
+======================================================================
+
+Date: 2026-08-06 12:53:40
+Input: resumes_with_entities_v3.csv
+Resumes: 2484
+
+TF-IDF Settings:
+  max_features: 10000
+  min_df: 1
+  max_df: 0.95
+  ngram_range: (1, 2)
+  sublinear_tf: True
+
+Vocabulary sizes:
+  SKILL: 6422
+  JOB_TITLE: 146
+  DEGREE: 205
+  INSTITUTION: 2184
+  CERTIFICATION: 1378
