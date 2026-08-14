@@ -121,15 +121,15 @@ jupyter notebook notebooks/06_evaluation.ipynb
 ## Development Phases
 
 | Phase | Title | Deliverable |
-|-------|-------|------------|
-| 1 | Data Prep & Exploration | `resumes_text.csv` |
-| 2 | NER Training | Trained NER model |
-| 3 | Entity Extraction | `resumes_entities.csv` |
-| 4 | Vectorization | TF-IDF + embeddings models |
-| 5 | Similarity Scoring | Category scores + feedback |
-| 6 | Testing & Evaluation | Unified pipeline module |
-| 7 | Frontend (Optional) | Browser UI demo |
-| 8 | FastAPI (Optional) | REST API |
+|-------|-------------------------|------------|
+| 1     | Data Prep & Exploration | `resumes_text.csv` |
+| 2     | NER Training            | Trained NER model |
+| 3     | Entity Extraction       | `resumes_entities.csv` |
+| 4     | Vectorization           | TF-IDF + embeddings models |
+| 5     | Similarity Scoring      | Category scores + feedback |
+| 6     | Testing & Evaluation    | Unified pipeline module |
+| 7     | Frontend (Optional)      | Browser UI demo |
+| 8     | FastAPI (Optional) REST API |
 
 ## Datasets Used
 

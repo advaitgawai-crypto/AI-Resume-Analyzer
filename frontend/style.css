@@ -238,11 +238,70 @@ html, body {
 .report-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-bottom: 22px;
 }
+
+.report-head-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-score-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.score-ring {
+  width: 60px;
+  height: 60px;
+}
+
+.score-ring-bg {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 3;
+}
+
+.score-ring-fill {
+  fill: none;
+  stroke: var(--teal);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s ease-out, stroke 0.3s ease;
+}
+
+.score-text {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--text);
+  text-anchor: middle;
+}
+
+.score-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Score Colors */
+.score-high .score-ring-fill { stroke: var(--teal); }
+.score-high .score-text { fill: var(--teal); }
+
+.score-med .score-ring-fill { stroke: var(--amber); }
+.score-med .score-text { fill: var(--amber); }
+
+.score-low .score-ring-fill { stroke: var(--red); }
+.score-low .score-text { fill: var(--red); }
 
 .report-file {
   font-family: var(--font-display);

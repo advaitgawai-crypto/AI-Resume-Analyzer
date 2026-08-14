@@ -26,13 +26,13 @@
 
     <!-- ============ STEP 01 — UPLOAD ============ -->
     <section class="step" id="step-upload">
-      <div class="step-label"><span class="step-num">01</span> Upload job posting</div>
+      <div class="step-label"><span class="step-num">01</span> Upload resume</div>
 
       <div id="dropzone" class="dropzone">
         <input type="file" id="file-input" accept="application/pdf" hidden />
         <div class="dropzone-icon">⇪</div>
         <div class="dropzone-text">
-          <strong>Drop a job posting PDF here</strong>
+          <strong>Drop a resume PDF here</strong>
           <span>or click to browse</span>
         </div>
         <div class="dropzone-file" id="dropzone-file"></div>
@@ -47,8 +47,28 @@
 
       <div class="card report-card">
         <div class="report-head">
-          <div class="report-file" id="report-filename">—</div>
-          <div class="report-time" id="report-time">—</div>
+          <div class="report-head-info">
+            <div class="report-file" id="report-filename">—</div>
+            <div class="report-time" id="report-time">—</div>
+          </div>
+          <div class="report-score-widget" id="report-score-widget">
+            <svg class="score-ring" viewBox="0 0 36 36">
+              <path class="score-ring-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path class="score-ring-fill" id="score-ring-fill"
+                pathLength="100"
+                stroke-dasharray="0, 100"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <text x="18" y="22" class="score-text" id="report-score-text">0</text>
+            </svg>
+            <div class="score-label">Strength</div>
+          </div>
         </div>
 
         <div class="report-grid">

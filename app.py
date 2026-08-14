@@ -208,14 +208,15 @@ def rank_resumes_by_category(similarities: Dict, resume_ids_arr: np.ndarray, job
 
 def generate_improvement_recommendations(job_entities: Dict, rankings: Dict,
                                           resumes_df: pd.DataFrame, top_n: int = IMPROVEMENT_TOP_N) -> Dict:
-    """Returns a plain dict (JSON-friendly) instead of a DataFrame/console report."""
+    """Returns a plain dict (JSON-friendly) with recommendations and a weighted profile score."""
 
     report = {
         "required_skills": [],
         "strengths": [],
         "strengths_note": "",
         "skills_to_develop": [],
-        "action_plan": ""
+        "action_plan": "",
+        "profile_score": 0
     }
 
     top_resumes = rankings['SKILL'].head(top_n)['resume_id'].tolist()
@@ -240,14 +241,36 @@ def generate_improvement_recommendations(job_entities: Dict, rankings: Dict,
         matching_skills = top_resume_skills & job_skills
         if matching_skills:
             report["strengths"] = sorted(matching_skills)
-            report["strengths_note"] = f"You already have {len(matching_skills)} of the required skills! Great foundation!"
+            report["strengths_note"] = f"You already have {len(matching_skills)} of the top required skills! Great foundation!"
 
     skill_counts = Counter(all_top_skills)
     missing_skills = []
-    for skill, count in skill_counts.most_common():
-        if skill not in job_skills:
-            priority = "HIGH" if count >= top_n - 2 else "MEDIUM" if count >= top_n / 2 else "LOW"
+    
+    total_possible_points = 0
+    user_points = 0
+    
+    # Calculate score based on the top 20 most relevant skills from peer matches
+    top_20_skills = skill_counts.most_common(20)
+    for skill, count in top_20_skills:
+        if count >= top_n - 2:
+            priority = "HIGH"
+            weight = 3
+        elif count >= top_n / 2:
+            priority = "MEDIUM"
+            weight = 2
+        else:
+            priority = "LOW"
+            weight = 1
+            
+        total_possible_points += weight
+        
+        if skill in job_skills:
+            user_points += weight
+        else:
             missing_skills.append({"skill": skill, "priority": priority})
+
+    if total_possible_points > 0:
+        report["profile_score"] = int(round((user_points / total_possible_points) * 100))
 
     report["skills_to_develop"] = missing_skills[:8]
 
@@ -437,6 +460,7 @@ def api_analyze():
             "strengths_note": rec["strengths_note"],
             "skills_to_develop": rec["skills_to_develop"],
             "action_plan": rec["action_plan"],
+            "profile_score": rec["profile_score"],
         }
 
         return jsonify(report)

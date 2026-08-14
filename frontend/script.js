@@ -41,6 +41,9 @@ const uploadStatus   = document.getElementById("upload-status");
 const stepReport     = document.getElementById("step-report");
 const reportFilename = document.getElementById("report-filename");
 const reportTime     = document.getElementById("report-time");
+const reportScoreWidget = document.getElementById("report-score-widget");
+const reportScoreText = document.getElementById("report-score-text");
+const scoreRingFill  = document.getElementById("score-ring-fill");
 const reportExperience = document.getElementById("report-experience");
 const reportSkills   = document.getElementById("report-skills");
 const reportTitlesBlock = document.getElementById("report-titles-block");
@@ -171,6 +174,25 @@ function showStatus(el, message, kind) {
 function renderReport(data) {
   reportFilename.textContent = data.job_posting_name || "—";
   reportTime.textContent = data.analyzed_at || "";
+
+  // Render Score
+  const score = data.profile_score || 0;
+  reportScoreText.textContent = score;
+  
+  // Set color class based on score
+  reportScoreWidget.classList.remove("score-high", "score-med", "score-low");
+  if (score >= 80) {
+    reportScoreWidget.classList.add("score-high");
+  } else if (score >= 50) {
+    reportScoreWidget.classList.add("score-med");
+  } else {
+    reportScoreWidget.classList.add("score-low");
+  }
+  
+  // Animate SVG ring (circumference is 100 for path length)
+  setTimeout(() => {
+    scoreRingFill.style.strokeDasharray = `${score}, 100`;
+  }, 100);
 
   reportExperience.textContent = data.required_experience
     ? `${data.required_experience} years`
