@@ -364,25 +364,45 @@ print("Starting AI Resume Analyzer web server...")
 print("=" * 80)
 
 print("[Startup] Loading upgraded NER model (v3)...")
+nlp = None
 try:
-    nlp = spacy.load(str(NER_MODEL_PATH))
-    print("[OK] NER model loaded (v3 - multi-profession)")
+    if NER_MODEL_PATH.exists():
+        nlp = spacy.load(str(NER_MODEL_PATH))
+        print("[OK] NER model loaded (v3 - multi-profession)")
+    else:
+        print(f"[WARN] NER model path does not exist: {NER_MODEL_PATH}")
+        nlp = spacy.load("en_core_web_sm")
+        print("[OK] Loaded fallback spaCy model (en_core_web_sm)")
 except Exception as e:
     print(f"[WARN] NER model failed to load: {e}")
     nlp = None
 
 print("[Startup] Loading resume database...")
-resume_df = pd.read_csv(RESUMES_WITH_ENTITIES)
-resume_ids = resume_df['resume_id'].values
-print(f"[OK] Loaded {len(resume_df)} resumes")
+resume_df = None
+resume_ids = np.array([])
+try:
+    if RESUMES_WITH_ENTITIES.exists():
+        resume_df = pd.read_csv(RESUMES_WITH_ENTITIES)
+        resume_ids = resume_df['resume_id'].values
+        print(f"[OK] Loaded {len(resume_df)} resumes")
+    else:
+        print(f"[WARN] Resume database not found: {RESUMES_WITH_ENTITIES}")
+        resume_df = pd.DataFrame()
+        print("[WARN] Running with empty resume database (analysis will be limited)")
+except Exception as e:
+    print(f"[WARN] Failed to load resume database: {e}")
+    resume_df = pd.DataFrame()
 
 print("[Startup] Loading vectorizers...")
 vectorizers = {}
 for entity_type in ENTITY_TYPES[:-1]:
     vectorizer_path = DATA_PROCESSED / f"vectorizer_{entity_type.lower()}.pkl"
     if vectorizer_path.exists():
-        with open(vectorizer_path, 'rb') as f:
-            vectorizers[entity_type] = pickle.load(f)
+        try:
+            with open(vectorizer_path, 'rb') as f:
+                vectorizers[entity_type] = pickle.load(f)
+        except Exception as e:
+            print(f"[WARN] Failed to load vectorizer for {entity_type}: {e}")
 print(f"[OK] Loaded {len(vectorizers)} vectorizers")
 
 print("[Startup] Loading resume vectors...")
@@ -390,7 +410,10 @@ resume_vectors = {}
 for entity_type in ENTITY_TYPES[:-1]:
     vector_path = DATA_PROCESSED / f"resume_vectors_{entity_type.lower()}.npz"
     if vector_path.exists():
-        resume_vectors[entity_type] = load_npz(str(vector_path))
+        try:
+            resume_vectors[entity_type] = load_npz(str(vector_path))
+        except Exception as e:
+            print(f"[WARN] Failed to load resume vectors for {entity_type}: {e}")
 print(f"[OK] Loaded {len(resume_vectors)} resume vector sets")
 
 print("=" * 80)
@@ -443,7 +466,12 @@ def api_analyze():
         job_vectors = vectorize_entities(job_entities, vectorizers)
         similarities = calculate_similarity_scores(job_vectors, resume_vectors)
 
-        # 5. Rank resumes
+        # 5. Rank resumes (handle empty dataframe)
+        if resume_df.empty:
+            return jsonify({
+                "error": "Resume database not loaded. Local testing only."
+            }), 503
+
         rankings = rank_resumes_by_category(similarities, resume_ids, job_experience, resume_df, top_n=TOP_N)
 
         # 6. Generate recommendations
