@@ -1,29 +1,3 @@
-#!/usr/bin/env python3
-"""
-================================================================================
-AI RESUME ANALYZER - LOCAL WEB APP (Flask backend)
-================================================================================
-Run this to start the local website:
-
-    python app.py
-
-Then open in your browser:
-
-    http://localhost:5000
-
-WHAT IT DOES
-------------
-1. Serves the frontend (index.html / style.css / script.js) from ./frontend
-2. /api/analyze   - accepts an uploaded job posting PDF, runs the same NLP
-                     pipeline as resume_analyzer.py, and returns a JSON report
-3. /api/search-jobs - accepts skills + city + country, calls the JSearch API
-                     (RapidAPI) and returns matching jobs
-
-The heavy stuff (spaCy model, 2,716 resumes, TF-IDF vectorizers, resume
-vectors) is loaded ONCE when the server starts, so every analysis after
-that is fast.
-================================================================================
-"""
 
 import os
 import re
@@ -47,9 +21,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from scipy.sparse import load_npz
 
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
+
 
 PROJECT_ROOT = Path(__file__).parent.absolute()
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -58,14 +30,9 @@ MODELS_DIR = PROJECT_ROOT / "models"
 UPLOAD_DIR = PROJECT_ROOT / "data" / "input" / "web_uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-# We use the NEW model which has 236 comprehensive skills built into the EntityRuler!
 NER_MODEL_PATH = PROJECT_ROOT / "models" / "ner_model_v3"
 RESUMES_WITH_ENTITIES = DATA_PROCESSED / "resumes_with_entities.csv"
 
-# JSearch API credentials (OpenWeb Ninja)
-# NOTE: it's better practice to load this from an environment variable
-# (e.g. os.environ.get("API_KEY")) instead of hardcoding it, especially
-# before this project ever goes public on GitHub.
 OPENWEBNINJA_API_KEY = "ak_03q5qhkasx5xo2e4x6mpu3bc3i4i2nuafrqm9jwle5it0rq"
 
 JSEARCH_URL = "https://api.openwebninja.com/jsearch/search-v2"
@@ -94,9 +61,6 @@ COUNTRY_MAP = {
 }
 
 
-# ============================================================================
-# PIPELINE FUNCTIONS (same logic as resume_analyzer.py)
-# ============================================================================
 
 def extract_pdf_text(pdf_path: Path) -> str:
     text = ""
@@ -249,7 +213,6 @@ def generate_improvement_recommendations(job_entities: Dict, rankings: Dict,
     total_possible_points = 0
     user_points = 0
     
-    # Calculate score based on the top 20 most relevant skills from peer matches
     top_20_skills = skill_counts.most_common(20)
     for skill, count in top_20_skills:
         if count >= top_n - 2:
@@ -285,9 +248,6 @@ def generate_improvement_recommendations(job_entities: Dict, rankings: Dict,
     return report
 
 
-# ============================================================================
-# JOB SEARCH FUNCTIONS (JSearch / RapidAPI version)
-# ============================================================================
 
 def search_jobs_jsearch(keywords: List[str], location: str, country_code: str = "in",
                          results_per_page: int = 30) -> List[Dict]:
@@ -355,9 +315,6 @@ def score_jobs(jobs: List[Dict], required_skills: List[str]) -> List[Dict]:
     return jobs
 
 
-# ============================================================================
-# LOAD HEAVY RESOURCES ONCE AT STARTUP
-# ============================================================================
 
 print("=" * 80)
 print("Starting AI Resume Analyzer web server...")
@@ -421,9 +378,6 @@ print("[OK] Server ready! Open http://localhost:5000")
 print("=" * 80)
 
 
-# ============================================================================
-# FLASK APP
-# ============================================================================
 
 app = Flask(__name__, static_folder="frontend", static_url_path="")
 
@@ -451,22 +405,17 @@ def api_analyze():
         save_path = UPLOAD_DIR / f"{timestamp}_{filename}"
         file.save(save_path)
 
-        # 1. Extract text
         job_text = extract_pdf_text(save_path)
 
-        # 2. Extract entities using our new v3 model
         if nlp is None:
             return jsonify({"error": "NER model unavailable"}), 500
         job_entities = extract_entities_ner(job_text, nlp)
 
-        # 3. Extract experience
         job_experience = extract_experience_duration(job_text, nlp)
 
-        # 4. Vectorize + similarity
         job_vectors = vectorize_entities(job_entities, vectorizers)
         similarities = calculate_similarity_scores(job_vectors, resume_vectors)
 
-        # 5. Rank resumes (handle empty dataframe)
         if resume_df.empty:
             return jsonify({
                 "error": "Resume database not loaded. Local testing only."
@@ -474,7 +423,6 @@ def api_analyze():
 
         rankings = rank_resumes_by_category(similarities, resume_ids, job_experience, resume_df, top_n=TOP_N)
 
-        # 6. Generate recommendations
         rec = generate_improvement_recommendations(job_entities, rankings, resume_df, top_n=IMPROVEMENT_TOP_N)
 
         report = {
@@ -518,7 +466,6 @@ def api_search_jobs():
         jobs = score_jobs(jobs, skills)
         jobs = sorted(jobs, key=lambda x: x['match_score'], reverse=True)[:20]
 
-        # trim long descriptions before sending to browser
         for j in jobs:
             desc = j.get('description', '')
             j['description'] = (desc[:220] + '…') if len(desc) > 220 else desc
