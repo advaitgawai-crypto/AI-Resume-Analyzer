@@ -13,6 +13,8 @@ from pathlib import Path
 from datetime import datetime
 from collections import Counter
 from typing import Dict, List, Optional
+from dotenv import load_dotenv
+load_dotenv()
 
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
@@ -33,8 +35,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 NER_MODEL_PATH = PROJECT_ROOT / "models" / "ner_model_v3"
 RESUMES_WITH_ENTITIES = DATA_PROCESSED / "resumes_with_entities.csv"
 
-OPENWEBNINJA_API_KEY = "ak_03q5qhkasx5xo2e4x6mpu3bc3i4i2nuafrqm9jwle5it0rq"
-
+OPENWEBNINJA_API_KEY = os.getenv('OPENWEBNINJA_API_KEY')
 JSEARCH_URL = "https://api.openwebninja.com/jsearch/search-v2"
 
 WEIGHTS = {
